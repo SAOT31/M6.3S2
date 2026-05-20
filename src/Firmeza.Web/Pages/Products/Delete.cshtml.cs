@@ -47,7 +47,7 @@ public class DeleteModel : PageModel
         }
         catch (Exception ex)
         {
-            // Puede ocurrir si el producto tiene detalles de venta (Restrict)
+            // Error si está referenciado en otra tabla
             ErrorMessage = $"Cannot delete this product: {ex.Message}";
             ProductId    = id;
 

@@ -21,40 +21,35 @@ public class CreateModel : PageModel
 
     public string? ErrorMessage { get; set; }
 
-    // AgeError es separado del ErrorMessage porque el campo de edad
-    // se muestra justo debajo del input, no en la barra de error general
+    // Mensaje de error específico para el campo edad
     public string? AgeError { get; set; }
 
     public void OnGet() { }
 
     public async Task<IActionResult> OnPostAsync()
     {
-        // ── TASK 7: VALIDACIÓN DE EDAD CON TRY-CATCH ──────────────────────────
-        // AgeInput llega como string desde el formulario
-        // int.Parse lanza FormatException si el valor no es un número entero
         int parsedAge;
         try
         {
+            // Convierte la edad recibida en texto a entero
             parsedAge = int.Parse(Client.AgeInput);
 
-            // Validación de rango adicional — un número es válido pero 999 no tiene sentido
+            // Valida rango de edad
             if (parsedAge < 0 || parsedAge > 120)
                 throw new ArgumentOutOfRangeException(nameof(parsedAge), "Age must be between 0 and 120.");
         }
         catch (FormatException)
         {
-            // El usuario escribió "veinticinco" o "25.5" — no es un entero
             AgeError = "Age must be a whole number (e.g. 25).";
-            return Page(); // vuelve al formulario con el mensaje de error
+            return Page();
         }
         catch (ArgumentOutOfRangeException ex)
         {
             AgeError = ex.Message;
             return Page();
         }
-        // ── FIN TASK 7 ─────────────────────────────────────────────────────────
 
-        // Verificamos el resto de validaciones del ViewModel (email, required, etc.)
+        // Valida otras reglas del modelo
         if (!ModelState.IsValid)
             return Page();
 
@@ -69,7 +64,7 @@ public class CreateModel : PageModel
                 Email          = Client.Email,
                 Phone          = Client.Phone,
                 Address        = Client.Address,
-                Age            = parsedAge, // usamos el valor ya convertido y validado
+                Age            = parsedAge,
                 CreatedAt      = DateTime.UtcNow
             };
 
@@ -80,7 +75,7 @@ public class CreateModel : PageModel
         }
         catch (Exception ex)
         {
-            // Puede fallar si el email o documento ya existen (índice único en la BD)
+            // Controla errores de persistencia (ej. llaves duplicadas)
             ErrorMessage = $"Error saving client: {ex.Message}";
             return Page();
         }

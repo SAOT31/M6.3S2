@@ -28,7 +28,7 @@ public class EditModel : PageModel
         if (product is null)
             return NotFound();
 
-        // Llena el ViewModel con los datos actuales del producto
+        // Llena el ViewModel
         Product = new ProductViewModel
         {
             Id          = product.Id,

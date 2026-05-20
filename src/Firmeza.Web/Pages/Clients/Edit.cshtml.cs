@@ -47,7 +47,7 @@ public class EditModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
-        // Misma validación de edad que en Create (Task 7)
+        // Convierte y valida la edad
         int parsedAge;
         try
         {

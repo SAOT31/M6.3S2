@@ -3,13 +3,12 @@ using Xunit;
 
 namespace Firmeza.Tests.Web;
 
-// Pruebas del modelo de datos del cliente — sin necesitar la BD
+// Pruebas unitarias de modelos
 public class CreateProductModelTests
 {
     [Fact]
     public void SaleDetail_Subtotal_ShouldBeQuantityTimesUnitPrice()
     {
-        // Verifica que el subtotal calculado es correcto
         var detail = new SaleDetail
         {
             Quantity  = 3,

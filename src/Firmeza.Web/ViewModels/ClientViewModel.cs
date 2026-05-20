@@ -25,13 +25,13 @@ public class ClientViewModel
     [Display(Name = "Document Number")]
     public string DocumentNumber { get; set; } = string.Empty;
 
-    // [EmailAddress] verifica que tenga formato válido: usuario@dominio.com
+    // Valida formato de correo electrónico
     [Required(ErrorMessage = "Email is required")]
     [EmailAddress(ErrorMessage = "Invalid email format")]
     [Display(Name = "Email")]
     public string Email { get; set; } = string.Empty;
 
-    // [Phone] verifica formato de teléfono básico
+    // Valida formato telefónico
     [Phone(ErrorMessage = "Invalid phone number")]
     [StringLength(20)]
     [Display(Name = "Phone")]
@@ -41,13 +41,11 @@ public class ClientViewModel
     [Display(Name = "Address")]
     public string Address { get; set; } = string.Empty;
 
-    // La edad se recibe como string para poder aplicar int.Parse con try-catch (Task 7)
-    // Si fuera int directamente, el framework haría la conversión automática y
-    // mostraría un error genérico — así tenemos control total del mensaje de error
+    // Entrada de edad como texto para validación manual
     [Display(Name = "Age")]
     public string AgeInput { get; set; } = string.Empty;
 
-    // Este se llena en el PageModel después de convertir AgeInput exitosamente
+    // Edad numérica convertida
     public int Age { get; set; }
 
     public static List<string> DocumentTypes => ["CC", "NIT", "CE", "Passport"];

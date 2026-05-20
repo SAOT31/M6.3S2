@@ -4,83 +4,70 @@ using Firmeza.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-// WebApplication.CreateBuilder arma el contenedor de servicios (inyección de dependencias)
-// y la configuración del servidor web
+// Configuración inicial de la aplicación
 var builder = WebApplication.CreateBuilder(args);
 
-// ── BASE DE DATOS ──────────────────────────────────────────────────────────────
-// Le decimos a EF Core que use PostgreSQL como motor de BD
-// La cadena de conexión viene del appsettings.json ("DefaultConnection")
+// Base de datos
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// ── IDENTITY (autenticación + roles) ──────────────────────────────────────────
-// AddIdentity registra todos los servicios de autenticación:
-// UserManager, SignInManager, RoleManager, etc.
+// Configuración de Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
-    // Requisitos mínimos de contraseña — ajustados para el taller
-    options.Password.RequireDigit           = true;   // debe tener al menos un número
-    options.Password.RequiredLength         = 6;      // mínimo 6 caracteres
-    options.Password.RequireNonAlphanumeric = false;  // no exige símbolos especiales
-    options.Password.RequireUppercase       = false;  // no exige mayúsculas
+    // Reglas de contraseña
+    options.Password.RequireDigit           = true;
+    options.Password.RequiredLength         = 6;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase       = false;
 
-    // No pedimos confirmar el email para simplificar el flujo del taller
+    // Registro simple sin confirmar email
     options.SignIn.RequireConfirmedAccount = false;
 })
-// Le decimos que guarde los usuarios y roles en nuestra BD (ApplicationDbContext)
+// Almacén de base de datos
 .AddEntityFrameworkStores<ApplicationDbContext>()
-// Agrega los tokens para reset de contraseña, confirmación de email, etc.
+// Proveedores de tokens por defecto
 .AddDefaultTokenProviders();
 
-// ── CONFIGURACIÓN DE COOKIES ───────────────────────────────────────────────────
-// Cuando alguien intente acceder a una página protegida sin estar logueado,
-// el framework lo redirige automáticamente a estas rutas
+// Configuración de cookies
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    options.LoginPath        = "/Auth/Login";        // redirige aquí si no está logueado
-    options.AccessDeniedPath = "/Auth/AccessDenied"; // redirige aquí si no tiene el rol correcto
-    options.ExpireTimeSpan   = TimeSpan.FromHours(8); // la sesión dura 8 horas
+    options.LoginPath        = "/Auth/Login";
+    options.AccessDeniedPath = "/Auth/AccessDenied";
+    options.ExpireTimeSpan   = TimeSpan.FromHours(8);
 });
 
-// ── RAZOR PAGES ───────────────────────────────────────────────────────────────
-// Registra el servicio de Razor Pages — sin esto el framework no procesa los .cshtml
+// Soporte para Razor Pages
 builder.Services.AddRazorPages();
 
-// Construimos la app con todos los servicios registrados arriba
+// Construcción de la aplicación
 var app = builder.Build();
 
-// ── SEED DE DATOS INICIALES ────────────────────────────────────────────────────
-// Antes de atender peticiones, creamos los roles y el admin por defecto si no existen
+// Inicialización de datos
 await SeedDatabase(app);
 
-// ── MIDDLEWARES (tuberías de procesamiento de peticiones) ─────────────────────
-// Solo en producción: manejo de errores y HTTPS estricto
+// Canal de procesamiento (Middlewares)
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    app.UseHsts(); // fuerza HTTPS en el navegador
+    app.UseHsts();
 }
 
-app.UseHttpsRedirection(); // redirige HTTP → HTTPS
-app.UseStaticFiles();      // sirve archivos de wwwroot (CSS, JS, imágenes)
-app.UseRouting();          // habilita el sistema de rutas
-app.UseAuthentication();   // lee la cookie de sesión y autentica al usuario
-app.UseAuthorization();    // verifica si el usuario tiene permiso para la ruta
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
 
-// Conecta las rutas a las páginas Razor
 app.MapRazorPages();
 
-// La ruta raíz "/" redirige directo al dashboard
+// Redirección al Dashboard
 app.MapGet("/", () => Results.Redirect("/Dashboard"));
 
 app.Run();
 
-// ── MÉTODO DE SEED ─────────────────────────────────────────────────────────────
-// Se ejecuta una sola vez al arrancar; crea roles y admin si no existen
+// Inicializa roles y usuario administrador
 static async Task SeedDatabase(WebApplication app)
 {
-    // CreateScope abre un "alcance" temporal para resolver servicios con ciclo Scoped
     using var scope = app.Services.CreateScope();
     var services = scope.ServiceProvider;
 
@@ -90,10 +77,10 @@ static async Task SeedDatabase(WebApplication app)
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
-        // Aplica cualquier migración pendiente — crea las tablas si no existen
+        // Ejecuta migraciones pendientes
         await context.Database.MigrateAsync();
 
-        // Crea los roles si todavía no están en la tabla AspNetRoles
+        // Creación de roles si no existen
         string[] roles = [AppRoles.Admin, AppRoles.Customer];
         foreach (var role in roles)
         {
@@ -101,7 +88,7 @@ static async Task SeedDatabase(WebApplication app)
                 await roleManager.CreateAsync(new IdentityRole(role));
         }
 
-        // Crea el usuario admin por defecto si no existe
+        // Creación de administrador por defecto
         const string adminEmail = "admin@firmeza.com";
         if (await userManager.FindByEmailAsync(adminEmail) is null)
         {
@@ -110,7 +97,7 @@ static async Task SeedDatabase(WebApplication app)
                 UserName       = adminEmail,
                 Email          = adminEmail,
                 DisplayName    = "Administrador",
-                EmailConfirmed = true // marcamos como confirmado para no pedir verificación
+                EmailConfirmed = true
             };
 
             var result = await userManager.CreateAsync(admin, "Admin123!");
@@ -120,8 +107,8 @@ static async Task SeedDatabase(WebApplication app)
     }
     catch (Exception ex)
     {
-        // Si la BD no está lista (contenedor aún iniciando), solo logueamos y seguimos
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Error durante el seed de la base de datos");
+        logger.LogError(ex, "Error durante la inicialización de la base de datos");
     }
 }
+

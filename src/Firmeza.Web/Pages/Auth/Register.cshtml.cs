@@ -33,32 +33,29 @@ public class RegisterModel : PageModel
 
         try
         {
-            // Creamos el objeto usuario con los datos del formulario
-            // UserName y Email deben ser iguales — Identity los usa para el login
+            // Crea instancia del usuario
             var user = new ApplicationUser
             {
                 UserName       = Input.Email,
                 Email          = Input.Email,
                 DisplayName    = $"{Input.FirstName} {Input.LastName}",
-                EmailConfirmed = true // saltamos la verificación de email para el taller
+                EmailConfirmed = true
             };
 
-            // CreateAsync crea el usuario en la BD con la contraseña hasheada (nunca en texto plano)
+            // Registra el usuario con la contraseña hasheada
             var result = await _userManager.CreateAsync(user, Input.Password);
 
             if (!result.Succeeded)
             {
-                // Identity devuelve errores claros: email duplicado, contraseña débil, etc.
+                // Recopila errores devueltos por Identity
                 ErrorMessage = string.Join(" ", result.Errors.Select(e => e.Description));
                 return Page();
             }
 
-            // Todo registro público crea un Cliente — nunca un Admin
-            // Así protegemos el panel aunque alguien intente registrarse con email de admin
+            // Asigna rol de cliente por defecto
             await _userManager.AddToRoleAsync(user, AppRoles.Customer);
 
-            // TempData guarda un mensaje que sobrevive UNA redirección
-            // Lo leemos en Login.cshtml para mostrar el mensaje de éxito
+            // Guarda mensaje de éxito para la redirección
             TempData["SuccessMessage"] = "Account created successfully. Please sign in.";
             return RedirectToPage("/Auth/Login");
         }
@@ -84,14 +81,14 @@ public class RegisterInput
     [Display(Name = "Email")]
     public string Email { get; set; } = string.Empty;
 
-    // StringLength define mínimo y máximo — el error se muestra automáticamente en la vista
+    // Regla de longitud para contraseña
     [Required]
     [StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters")]
     [DataType(DataType.Password)]
     [Display(Name = "Password")]
     public string Password { get; set; } = string.Empty;
 
-    // Compare hace que este campo deba coincidir con la propiedad "Password"
+    // Compara con el campo contraseña
     [Required]
     [DataType(DataType.Password)]
     [Compare("Password", ErrorMessage = "Passwords do not match")]

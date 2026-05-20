@@ -16,33 +16,30 @@ public class IndexModel : PageModel
         _context = context;
     }
 
-    // Lista de productos que se muestra en la tabla — la vista la lee con @Model.Products
+    // Lista de productos para la tabla
     public List<Product> Products { get; set; } = [];
 
-    // Guardamos los valores de búsqueda para que el formulario los muestre al volver a cargar
+    // Parámetros de búsqueda en la UI
     public string? Search   { get; set; }
     public string? Category { get; set; }
 
-    // Los parámetros search y category vienen del query string de la URL
-    // Ejemplo: /Products?search=cemento&category=Cement
     public async Task OnGetAsync(string? search, string? category)
     {
         Search   = search;
         Category = category;
 
-        // AsQueryable() permite ir armando la consulta de forma condicional
-        // sin ejecutarla hasta el ToListAsync() final
+        // Construcción condicional de la consulta
         var query = _context.Products.AsQueryable();
 
-        // Solo agrega el filtro si el usuario escribió algo en el buscador
+        // Filtra por nombre
         if (!string.IsNullOrEmpty(search))
             query = query.Where(p => p.Name.ToLower().Contains(search.ToLower()));
 
-        // Solo filtra por categoría si el usuario eligió una
+        // Filtra por categoría
         if (!string.IsNullOrEmpty(category))
             query = query.Where(p => p.Category == category);
 
-        // OrderBy + ToListAsync ejecuta el SELECT final con todos los filtros aplicados
+        // Ejecuta la consulta ordenada
         Products = await query
             .OrderBy(p => p.Name)
             .ToListAsync();

@@ -6,12 +6,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Firmeza.Web.Pages.Dashboard;
 
-// [Authorize(Roles = "Admin")] hace que el framework bloquee la página si el usuario
-// no está logueado o no tiene el rol Admin — redirige a /Auth/Login automáticamente
+// Autorización restringida a administradores
 [Authorize(Roles = "Admin")]
 public class IndexModel : PageModel
 {
-    // Inyectamos el contexto de BD para poder hacer consultas
+    // Contexto de base de datos
     private readonly ApplicationDbContext _context;
 
     public IndexModel(ApplicationDbContext context)
@@ -19,29 +18,27 @@ public class IndexModel : PageModel
         _context = context;
     }
 
-    // Esta propiedad se llena en OnGetAsync y la vista la lee con @Model.Stats
+    // Modelo de datos para la vista
     public DashboardViewModel Stats { get; set; } = new();
 
-    // OnGetAsync se ejecuta cuando alguien entra al dashboard (petición GET)
+    // Consulta estadísticas del dashboard
     public async Task OnGetAsync()
     {
-        // CountAsync() hace un SELECT COUNT(*) — más eficiente que traer todos los registros
+        // Cuenta totales
         Stats.TotalProducts = await _context.Products.CountAsync();
         Stats.TotalClients  = await _context.Clients.CountAsync();
         Stats.TotalSales    = await _context.Sales.CountAsync();
 
-        // SumAsync suma el campo Total solo de ventas completadas
-        // El (decimal?) es para que no falle si no hay ventas todavía (null → 0)
+        // Suma ingresos de ventas completadas
         Stats.TotalRevenue = await _context.Sales
             .Where(s => s.Status == "Completed")
             .SumAsync(s => (decimal?)s.Total) ?? 0;
 
-        // Include() hace un JOIN con la tabla de clientes para traer el nombre
-        // Select() transforma el resultado en el DTO que necesita la vista
+        // Consulta las últimas 5 ventas
         Stats.RecentSales = await _context.Sales
             .Include(s => s.Client)
-            .OrderByDescending(s => s.SaleDate) // las más recientes primero
-            .Take(5)                             // solo las últimas 5
+            .OrderByDescending(s => s.SaleDate)
+            .Take(5)
             .Select(s => new RecentSaleItem
             {
                 SaleId     = s.Id,
@@ -52,10 +49,10 @@ public class IndexModel : PageModel
             })
             .ToListAsync();
 
-        // Productos con stock crítico (menos de 10 unidades)
+        // Consulta productos con bajo stock (< 10)
         Stats.LowStockProducts = await _context.Products
             .Where(p => p.Stock < 10)
-            .OrderBy(p => p.Stock) // los más críticos primero
+            .OrderBy(p => p.Stock)
             .Select(p => new LowStockItem
             {
                 ProductName = p.Name,

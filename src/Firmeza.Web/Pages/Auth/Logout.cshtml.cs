@@ -14,7 +14,7 @@ public class LogoutModel : PageModel
         _signInManager = signInManager;
     }
 
-    // GET no debería usarse para logout, pero por si alguien llega directamente
+    // Redirecciona al login si es petición GET
     public IActionResult OnGet() => RedirectToPage("/Auth/Login");
 
     public async Task<IActionResult> OnPostAsync()

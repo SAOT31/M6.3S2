@@ -1,6 +1,6 @@
 namespace Firmeza.Core.Interfaces;
 
-// Contrato mínimo de persistencia — Core no toca EF, eso es responsabilidad de Infrastructure
+// Interfaz de persistencia para desacoplar el contexto
 public interface IApplicationDbContext
 {
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
