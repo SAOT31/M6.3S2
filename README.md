@@ -189,33 +189,33 @@ Resultado esperado: **11 pruebas pasando, 0 fallando**.
 
 ## Funcionalidades implementadas
 
-### Autenticación (Task 4)
+### Autenticación
 - Login con validación de rol — si un `Customer` intenta entrar al panel, se le bloquea.
 - Registro público de clientes — cualquier persona puede crear una cuenta como `Customer`.
 - Logout desde el sidebar.
 - Página de acceso denegado (403).
 
-### Dashboard (Task 5)
+### Dashboard
 - Total de productos, clientes, ventas e ingresos.
 - Tabla de últimas 5 ventas con estado (Pending / Completed / Cancelled).
 - Alerta de productos con stock menor a 10 unidades.
 
-### Gestión de Productos (Task 6)
+### Gestión de Productos
 - CRUD completo: crear, listar, editar, eliminar.
 - Búsqueda por nombre.
 - Filtrado por categoría (Cemento, Varilla, Pintura, etc.).
 - Indicador visual de stock bajo.
 
-### Manejo de errores — Edad (Task 7)
+### Manejo de errores — Edad
 - El campo `Age` del cliente se recibe como texto (`AgeInput`).
 - Se convierte con `int.Parse()` dentro de un `try-catch`.
 - Si el usuario escribe letras, se muestra un mensaje claro: *"Age must be a whole number"*.
 
-### Gestión de Clientes (Task 8)
+### Gestión de Clientes
 - CRUD completo con validaciones de email, teléfono y documento.
 - Búsqueda combinada por nombre completo o número de documento.
 
-### Ventas (Task 5)
+### Ventas
 - Lista de ventas con filtro por estado y búsqueda por cliente.
 
 ---
@@ -239,4 +239,4 @@ Los diagramas técnicos se encuentran en `docs/diagrams/`:
 
 ## Autor
 
-Proyecto desarrollado como taller académico M6.3S1 — Administración de Sistemas Web con ASP.NET Core.
+**Sergio Ospina**
