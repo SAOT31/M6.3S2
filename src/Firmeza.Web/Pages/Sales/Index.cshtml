@@ -6,9 +6,12 @@
     ViewData["Title"] = "Sales";
 }
 
-<!-- Encabezado -->
 <div class="flex items-center justify-between mb-6">
     <p class="text-sm text-gray-500">Sales history and status tracking</p>
+    <a href="/Sales/Create"
+       class="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-400 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+        <i class="bi bi-plus-lg"></i> New Sale
+    </a>
 </div>
 
 <!-- Filtro de estado -->
@@ -46,7 +49,7 @@
                 <th class="px-5 py-3 text-left">Items</th>
                 <th class="px-5 py-3 text-left">Total</th>
                 <th class="px-5 py-3 text-left">Status</th>
-                <th class="px-5 py-3 text-center">Actions</th>
+                                <th class="px-5 py-3 text-center">Actions</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
@@ -80,6 +83,17 @@
                            class="p-1.5 text-slate-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors" title="View detail">
                             <i class="bi bi-eye"></i>
                         </a>
+                        @{
+                            var receiptFile = System.IO.Path.Combine(
+                                Directory.GetCurrentDirectory(), "wwwroot", "recibos", $"recibo-{s.Id}.pdf");
+                        }
+                        @if (System.IO.File.Exists(receiptFile))
+                        {
+                            <a href="/recibos/recibo-@(s.Id).pdf" target="_blank"
+                               class="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors" title="Download Receipt PDF">
+                                <i class="bi bi-file-earmark-pdf"></i>
+                            </a>
+                        }
                     </td>
                 </tr>
             }

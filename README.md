@@ -15,7 +15,8 @@ Sistema web administrativo desarrollado con **ASP.NET Core 10 Razor Pages** para
 | Estilos | Tailwind CSS (CDN) + Bootstrap Icons |
 | Pruebas | xUnit |
 | Contenedores | Docker + docker-compose |
-| Exportación (preparado) | EPPlus (Excel) + QuestPDF (PDF) |
+| Importación Excel | EPPlus 8 |
+| Exportación / Recibos | QuestPDF 2026 |
 
 ---
 
@@ -183,7 +184,7 @@ Accede en `http://localhost:8080`
 dotnet test tests/Firmeza.Tests
 ```
 
-Resultado esperado: **11 pruebas pasando, 0 fallando**.
+Resultado esperado: **24 pruebas pasando, 0 fallando**.
 
 ---
 
@@ -217,6 +218,22 @@ Resultado esperado: **11 pruebas pasando, 0 fallando**.
 
 ### Ventas
 - Lista de ventas con filtro por estado y búsqueda por cliente.
+- Creación de venta con carrito dinámico (selección de cliente y productos).
+- Generación automática de recibo PDF al registrar una venta.
+- Botón de descarga del recibo PDF desde el listado y el detalle.
+- Página de detalle con productos, totales e IVA 19%.
+
+### Importación
+- Página `/Import` que acepta archivos `.xlsx`.
+- Detección automática de columnas en español e inglés.
+- Normalización de datos mezclados (productos y clientes en la misma hoja).
+- Upsert inteligente: inserta si no existe, actualiza si ya existe.
+- Log visual de resultados con contadores y mensajes de error por fila.
+
+### Exportación
+- Página `/Export` con descarga directa de Excel y PDF.
+- **Excel**: Productos, Clientes y Ventas con encabezados estilizados (EPPlus).
+- **PDF**: Reportes con encabezado corporativo, tablas y pie de página (QuestPDF).
 
 ---
 

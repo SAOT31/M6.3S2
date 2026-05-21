@@ -86,7 +86,20 @@
                 <i class="bi bi-receipt text-lg"></i>
                 <span>Sales</span>
             </a>
-        </nav>
+
+            <p class="text-xs text-slate-500 uppercase tracking-widest px-2 mt-4 mb-2">Tools</p>
+
+            <a href="/Import"
+               class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors @(ViewContext.RouteData.Values["page"]?.ToString()?.StartsWith("/Import") == true ? "bg-brand-700 text-white" : "")">
+                <i class="bi bi-upload text-lg"></i>
+                <span>Import</span>
+            </a>
+
+            <a href="/Export"
+               class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors @(ViewContext.RouteData.Values["page"]?.ToString()?.StartsWith("/Export") == true ? "bg-brand-700 text-white" : "")">
+                <i class="bi bi-download text-lg"></i>
+                <span>Export</span>
+            </a>
 
         <!-- Footer del sidebar con info del usuario -->
         <div class="px-4 py-4 border-t border-slate-700">
@@ -122,6 +135,14 @@
                 <span class="text-sm text-gray-500">@DateTime.Now.ToString("MMM dd, yyyy")</span>
             </div>
         </header>
+
+        @if (TempData["Success"] is string successMsg)
+        {
+            <div class="mx-6 mt-4 bg-green-50 border border-green-200 text-green-700 rounded-xl px-5 py-3 flex items-center gap-3 text-sm">
+                <i class="bi bi-check-circle-fill"></i>
+                <span>@successMsg</span>
+            </div>
+        }
 
         <!-- Página -->
         <main class="flex-1 p-6">

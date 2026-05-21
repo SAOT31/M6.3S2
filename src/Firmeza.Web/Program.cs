@@ -1,8 +1,16 @@
 using Firmeza.Core.Enums;
+using Firmeza.Core.Services;
 using Firmeza.Infrastructure.Data;
 using Firmeza.Infrastructure.Identity;
+using Firmeza.Web.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
+using QuestPDF.Infrastructure;
+
+// Licencias de librerías de exportación
+ExcelPackage.License.SetNonCommercialOrganization("Firmeza");
+QuestPDF.Settings.License   = LicenseType.Community;
 
 // Configuración inicial de la aplicación
 var builder = WebApplication.CreateBuilder(args);
@@ -38,6 +46,10 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 // Soporte para Razor Pages
 builder.Services.AddRazorPages();
+
+// Servicios de dominio
+builder.Services.AddScoped<ImportParserService>();
+builder.Services.AddScoped<PdfReceiptService>();
 
 // Construcción de la aplicación
 var app = builder.Build();
