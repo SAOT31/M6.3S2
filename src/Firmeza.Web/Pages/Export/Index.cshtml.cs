@@ -30,7 +30,7 @@ public class IndexModel : PageModel
         SaleCount    = await _context.Sales.CountAsync();
     }
 
-    // ── Excel ────────────────────────────────────────────────────────────────
+    // Excel
 
     public async Task<IActionResult> OnGetProductsExcelAsync()
     {
@@ -114,7 +114,7 @@ public class IndexModel : PageModel
         return File(pkg.GetAsByteArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "sales.xlsx");
     }
 
-    // ── PDF ──────────────────────────────────────────────────────────────────
+    // PDF
 
     public async Task<IActionResult> OnGetProductsPdfAsync()
     {
@@ -319,7 +319,7 @@ public class IndexModel : PageModel
         return File(pdf.GeneratePdf(), "application/pdf", "sales.pdf");
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // Helpers
 
     private static void StyleHeader(ExcelWorksheet sheet, string[] headers)
     {

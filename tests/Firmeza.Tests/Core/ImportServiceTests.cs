@@ -6,7 +6,7 @@ public class ImportServiceTests
 {
     private readonly ImportParserService _parser = new();
 
-    // ── Productos ─────────────────────────────────────────────────────────────
+    // Productos
 
     [Fact]
     public void ParseProductRow_DatosValidos_RetornaProducto()
@@ -76,7 +76,7 @@ public class ImportServiceTests
         Assert.Equal(12.00m, producto.Price);
     }
 
-    // ── Clientes ──────────────────────────────────────────────────────────────
+    // Clientes
 
     [Fact]
     public void ParseClientRow_DatosValidos_RetornaCliente()

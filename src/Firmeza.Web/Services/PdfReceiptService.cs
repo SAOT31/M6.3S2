@@ -38,7 +38,7 @@ public class PdfReceiptService
                 page.Margin(2, Unit.Centimetre);
                 page.DefaultTextStyle(x => x.FontSize(11).FontFamily("Arial"));
 
-                // ── Encabezado ────────────────────────────────────────────────
+                // Encabezado
                 page.Header().Column(col =>
                 {
                     col.Item().Row(row =>
@@ -64,7 +64,7 @@ public class PdfReceiptService
                     col.Item().PaddingTop(8).LineHorizontal(1.5f).LineColor(Color.FromHex("#ca8a04"));
                 });
 
-                // ── Contenido ─────────────────────────────────────────────────
+                // Contenido
                 page.Content().PaddingTop(16).Column(col =>
                 {
                     // Datos del cliente
@@ -164,7 +164,7 @@ public class PdfReceiptService
                     });
                 });
 
-                // ── Pie de página ─────────────────────────────────────────────
+                // Pie de página
                 page.Footer().AlignCenter().Text(text =>
                 {
                     text.Span("Firmeza © — Materiales de Construcción | ")

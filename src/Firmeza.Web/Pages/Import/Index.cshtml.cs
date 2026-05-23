@@ -84,7 +84,7 @@ public class IndexModel : PageModel
             // Ignorar filas completamente vacías
             if (row.Values.All(string.IsNullOrWhiteSpace)) continue;
 
-            // ── Intentar parsear como Producto ──────────────────────────
+            // Intentar parsear como Producto
             var (product, productError) = _parser.ParseProductRow(row);
             if (product != null)
             {
@@ -110,7 +110,7 @@ public class IndexModel : PageModel
                 }
             }
 
-            // ── Intentar parsear como Cliente ────────────────────────────
+            // Intentar parsear como Cliente
             var (client, clientError) = _parser.ParseClientRow(row);
             if (client != null)
             {
