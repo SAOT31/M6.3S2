@@ -121,7 +121,6 @@ public class IndexModel : PageModel
             }
             else
             {
-                string? prodName = null;
                 if (row.TryGetValue("ProductName", out var pName) ||
                     row.TryGetValue("Producto",    out pName) ||
                     row.TryGetValue("Name",        out pName))
@@ -161,7 +160,6 @@ public class IndexModel : PageModel
             }
             else
             {
-                string? docNum = null;
                 if (row.TryGetValue("DocumentNumber", out var dNum) ||
                     row.TryGetValue("Documento",      out dNum) ||
                     row.TryGetValue("Cedula",         out dNum))
