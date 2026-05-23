@@ -14,9 +14,10 @@
     <p class="font-semibold mb-1"><i class="bi bi-info-circle mr-1"></i> Expected Excel columns (order does not matter):</p>
     <p class="text-xs font-mono mt-1">
         ProductName | Category | Unit | Price | Stock | Description |
-        ClientFirstName | ClientLastName | DocumentNumber | DocumentType | Email | Phone | Address | Age
+        ClientFirstName | ClientLastName | DocumentNumber | DocumentType | Email | Phone | Address | Age |
+        Quantity | SaleDate | Status
     </p>
-    <p class="text-xs mt-2">Leave product or client columns empty in a row to skip that entity. Spanish column names are also accepted (Producto, Precio, Nombre, Apellido, Cedula, etc.).</p>
+    <p class="text-xs mt-2">Leave product or client columns empty in a row to skip that entity. Spanish column names are also accepted (Producto, Precio, Nombre, Apellido, Cedula, Cantidad, Fecha, etc.).</p>
 </div>
 
 <!-- Formulario de carga -->
@@ -46,7 +47,7 @@
         </h2>
 
         <!-- Resumen -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-5">
             <div class="bg-green-50 rounded-lg p-4 text-center">
                 <p class="text-2xl font-bold text-green-600">@Model.ProductsInserted</p>
                 <p class="text-xs text-green-700 mt-1">Products inserted</p>
@@ -63,7 +64,12 @@
                 <p class="text-2xl font-bold text-blue-600">@Model.ClientsUpdated</p>
                 <p class="text-xs text-blue-700 mt-1">Clients updated</p>
             </div>
+            <div class="bg-purple-50 rounded-lg p-4 text-center">
+                <p class="text-2xl font-bold text-purple-600">@Model.SalesInserted</p>
+                <p class="text-xs text-purple-700 mt-1">Sales registered</p>
+            </div>
         </div>
+
 
         <!-- Log detallado -->
         <div class="max-h-72 overflow-y-auto rounded-lg border border-gray-100 bg-gray-50 p-3 space-y-1">

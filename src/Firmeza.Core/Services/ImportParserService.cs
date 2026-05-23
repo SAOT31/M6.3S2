@@ -95,6 +95,48 @@ public class ImportParserService
         }, null);
     }
 
+    private static readonly Dictionary<string, string> SaleColumnMap = new(StringComparer.OrdinalIgnoreCase)
+    {
+        { "quantity",     "Quantity" },
+        { "cantidad",     "Quantity" },
+        { "cant",         "Quantity" },
+        { "qty",          "Quantity" },
+        { "saledate",     "SaleDate" },
+        { "fechaventa",   "SaleDate" },
+        { "fecha",        "SaleDate" },
+        { "date",         "SaleDate" },
+        { "status",       "Status"   },
+        { "estado",       "Status"   },
+    };
+
+    public (int? quantity, DateTime? saleDate, string? status, string? error) ParseSaleRow(Dictionary<string, string> row)
+    {
+        var m = MapRow(row, SaleColumnMap);
+
+        if (!m.TryGetValue("Quantity", out var qtyStr) || string.IsNullOrWhiteSpace(qtyStr))
+            return (null, null, null, null);
+
+        if (!int.TryParse(qtyStr, out var quantity) || quantity <= 0)
+            return (null, null, null, $"Venta: 'Quantity' inválido o ausente (valor: '{qtyStr}').");
+
+        DateTime? saleDate = null;
+        if (m.TryGetValue("SaleDate", out var dateStr) && !string.IsNullOrWhiteSpace(dateStr))
+        {
+            if (DateTime.TryParse(dateStr, System.Globalization.CultureInfo.InvariantCulture, out var parsedDate))
+            {
+                saleDate = parsedDate;
+            }
+            else if (DateTime.TryParse(dateStr, out var parsedDateLocal))
+            {
+                saleDate = parsedDateLocal;
+            }
+        }
+
+        m.TryGetValue("Status", out var status);
+
+        return (quantity, saleDate, status?.Trim(), null);
+    }
+
     // Normaliza claves: quita espacios, guiones y guiones bajos; luego busca en el mapa
     private static Dictionary<string, string> MapRow(
         Dictionary<string, string> raw,
@@ -110,3 +152,4 @@ public class ImportParserService
         return result;
     }
 }
+

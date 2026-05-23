@@ -1,6 +1,8 @@
 using Firmeza.Core.Entities;
 using Firmeza.Infrastructure.Data;
+using Firmeza.Web.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,7 +32,6 @@ public class IndexModel : PageModel
             .Include(s => s.Details)
             .AsQueryable();
 
-        // Filtra por nombre del cliente
         if (!string.IsNullOrEmpty(search))
         {
             var lower = search.ToLower();
@@ -38,7 +39,6 @@ public class IndexModel : PageModel
                 (s.Client.FirstName + " " + s.Client.LastName).ToLower().Contains(lower));
         }
 
-        // Filtra por estado: Pending, Completed, Cancelled
         if (!string.IsNullOrEmpty(status))
             query = query.Where(s => s.Status == status);
 
@@ -46,4 +46,19 @@ public class IndexModel : PageModel
             .OrderByDescending(s => s.SaleDate)
             .ToListAsync();
     }
+
+    public async Task<IActionResult> OnGetDownloadReceiptAsync(int id, [FromServices] PdfReceiptService pdfService)
+    {
+        var sale = await _context.Sales
+            .Include(s => s.Client)
+            .Include(s => s.Details).ThenInclude(d => d.Product)
+            .FirstOrDefaultAsync(s => s.Id == id);
+
+        if (sale is null)
+            return NotFound();
+
+        var bytes = pdfService.GenerateReceiptBytes(sale);
+        return File(bytes, "application/pdf", $"recibo-{sale.Id}.pdf");
+    }
 }
+

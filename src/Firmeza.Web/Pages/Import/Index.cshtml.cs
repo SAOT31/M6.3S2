@@ -1,6 +1,10 @@
+using Firmeza.Core.Entities;
 using Firmeza.Core.Services;
 using Firmeza.Infrastructure.Data;
+using Firmeza.Infrastructure.Identity;
+using Firmeza.Web.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -13,11 +17,19 @@ public class IndexModel : PageModel
 {
     private readonly ApplicationDbContext _context;
     private readonly ImportParserService  _parser;
+    private readonly PdfReceiptService    _pdf;
+    private readonly UserManager<ApplicationUser> _userManager;
 
-    public IndexModel(ApplicationDbContext context, ImportParserService parser)
+    public IndexModel(
+        ApplicationDbContext context,
+        ImportParserService parser,
+        PdfReceiptService pdf,
+        UserManager<ApplicationUser> userManager)
     {
-        _context = context;
-        _parser  = parser;
+        _context     = context;
+        _parser      = parser;
+        _pdf         = pdf;
+        _userManager = userManager;
     }
 
     public List<string> ImportLog       { get; set; } = [];
@@ -25,6 +37,7 @@ public class IndexModel : PageModel
     public int ProductsUpdated  { get; set; }
     public int ClientsInserted  { get; set; }
     public int ClientsUpdated   { get; set; }
+    public int SalesInserted    { get; set; }
 
     public void OnGet() { }
 
@@ -42,7 +55,6 @@ public class IndexModel : PageModel
             return Page();
         }
 
-        // EPPlus licencia non-commercial
         ExcelPackage.License.SetNonCommercialOrganization("Firmeza");
 
         using var stream  = new MemoryStream();
@@ -56,11 +68,10 @@ public class IndexModel : PageModel
             return Page();
         }
 
-        // Leer encabezados de la primera fila
         int colCount = sheet.Dimension.End.Column;
         int rowCount = sheet.Dimension.End.Row;
 
-        var headers = new Dictionary<int, string>(); // colIndex → header name
+        var headers = new Dictionary<int, string>();
         for (int c = 1; c <= colCount; c++)
         {
             var h = sheet.Cells[1, c].Text?.Trim();
@@ -70,28 +81,25 @@ public class IndexModel : PageModel
 
         ImportLog.Add($"─── File: {file.FileName}  |  Rows: {rowCount - 1}  |  Columns: {headers.Count} ───");
 
-        // Cargar datos existentes para el upsert
         var existingProducts = await _context.Products.ToDictionaryAsync(p => p.Name.ToLower());
         var existingClients  = await _context.Clients.ToDictionaryAsync(c => c.DocumentNumber);
+        var newSales         = new List<Sale>();
 
-        // Procesar cada fila de datos (desde fila 2)
         for (int r = 2; r <= rowCount; r++)
         {
             var row = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var (col, header) in headers)
                 row[header] = sheet.Cells[r, col].Text?.Trim() ?? string.Empty;
 
-            // Ignorar filas completamente vacías
             if (row.Values.All(string.IsNullOrWhiteSpace)) continue;
 
-            // Intentar parsear como Producto
             var (product, productError) = _parser.ParseProductRow(row);
+            Product? resolvedProduct = null;
             if (product != null)
             {
                 var key = product.Name.ToLower();
                 if (existingProducts.TryGetValue(key, out var existing))
                 {
-                    // Actualizar
                     existing.Category    = product.Category;
                     existing.Unit        = product.Unit;
                     existing.Description = product.Description;
@@ -100,6 +108,7 @@ public class IndexModel : PageModel
                     existing.UpdatedAt   = DateTime.UtcNow;
                     ProductsUpdated++;
                     ImportLog.Add($"✓ Row {r}: Product UPDATED → '{product.Name}'");
+                    resolvedProduct = existing;
                 }
                 else
                 {
@@ -107,16 +116,30 @@ public class IndexModel : PageModel
                     existingProducts[key] = product;
                     ProductsInserted++;
                     ImportLog.Add($"✓ Row {r}: Product INSERTED → '{product.Name}'");
+                    resolvedProduct = product;
+                }
+            }
+            else
+            {
+                string? prodName = null;
+                if (row.TryGetValue("ProductName", out var pName) ||
+                    row.TryGetValue("Producto",    out pName) ||
+                    row.TryGetValue("Name",        out pName))
+                {
+                    var cleanProdName = pName?.Trim();
+                    if (!string.IsNullOrEmpty(cleanProdName))
+                    {
+                        existingProducts.TryGetValue(cleanProdName.ToLower(), out resolvedProduct);
+                    }
                 }
             }
 
-            // Intentar parsear como Cliente
             var (client, clientError) = _parser.ParseClientRow(row);
+            Client? resolvedClient = null;
             if (client != null)
             {
                 if (existingClients.TryGetValue(client.DocumentNumber, out var existingClient))
                 {
-                    // Actualizar
                     existingClient.FirstName  = client.FirstName;
                     existingClient.LastName   = client.LastName;
                     existingClient.Email      = client.Email;
@@ -125,6 +148,7 @@ public class IndexModel : PageModel
                     existingClient.Age        = client.Age;
                     ClientsUpdated++;
                     ImportLog.Add($"✓ Row {r}: Client UPDATED  → '{client.FullName}' ({client.DocumentNumber})");
+                    resolvedClient = existingClient;
                 }
                 else
                 {
@@ -132,22 +156,102 @@ public class IndexModel : PageModel
                     existingClients[client.DocumentNumber] = client;
                     ClientsInserted++;
                     ImportLog.Add($"✓ Row {r}: Client INSERTED → '{client.FullName}' ({client.DocumentNumber})");
+                    resolvedClient = client;
+                }
+            }
+            else
+            {
+                string? docNum = null;
+                if (row.TryGetValue("DocumentNumber", out var dNum) ||
+                    row.TryGetValue("Documento",      out dNum) ||
+                    row.TryGetValue("Cedula",         out dNum))
+                {
+                    var cleanDocNum = dNum?.Trim();
+                    if (!string.IsNullOrEmpty(cleanDocNum))
+                    {
+                        existingClients.TryGetValue(cleanDocNum, out resolvedClient);
+                    }
                 }
             }
 
-            // Si ambos fallaron y la fila no estaba vacía, registrar aviso
-            if (product is null && client is null)
+            var (qty, saleDate, status, saleError) = _parser.ParseSaleRow(row);
+            if (saleError != null)
             {
-                var info = productError ?? clientError ?? "Could not identify row as product or client.";
+                ImportLog.Add($"✗ Row {r}: Venta omitida — {saleError}");
+            }
+            else if (qty.HasValue)
+            {
+                if (resolvedProduct is null)
+                {
+                    ImportLog.Add($"✗ Row {r}: Venta omitida — No se especificó o no se encontró el producto.");
+                }
+                else if (resolvedClient is null)
+                {
+                    ImportLog.Add($"✗ Row {r}: Venta omitida — No se especificó o no se encontró el cliente.");
+                }
+                else
+                {
+                    if (resolvedProduct.Stock < qty.Value)
+                    {
+                        ImportLog.Add($"✗ Row {r}: Venta omitida — Stock insuficiente para '{resolvedProduct.Name}'. Disponible: {resolvedProduct.Stock}, Solicitado: {qty.Value}");
+                    }
+                    else
+                    {
+                        resolvedProduct.Stock -= qty.Value;
+
+                        var userId = _userManager.GetUserId(User) ?? string.Empty;
+                        var sale = new Sale
+                        {
+                            Client   = resolvedClient,
+                            UserId   = userId,
+                            SaleDate = saleDate ?? DateTime.UtcNow,
+                            Status   = status ?? "Completed"
+                        };
+
+                        var detail = new SaleDetail
+                        {
+                            Product   = resolvedProduct,
+                            Quantity  = qty.Value,
+                            UnitPrice = resolvedProduct.Price
+                        };
+
+                        sale.Details.Add(detail);
+                        sale.Total = detail.Subtotal;
+
+                        _context.Sales.Add(sale);
+                        newSales.Add(sale);
+                        SalesInserted++;
+                        ImportLog.Add($"✓ Row {r}: Sale REGISTERED → '{resolvedClient.FullName}' compró {qty.Value}x '{resolvedProduct.Name}'");
+                    }
+                }
+            }
+
+            if (product is null && client is null && !qty.HasValue)
+            {
+                var info = productError ?? clientError ?? "Could not identify row as product, client or sale.";
                 ImportLog.Add($"✗ Row {r}: SKIPPED — {info}");
             }
         }
 
         await _context.SaveChangesAsync();
 
+        foreach (var sale in newSales)
+        {
+            try
+            {
+                _pdf.GenerateReceipt(sale);
+            }
+            catch (Exception ex)
+            {
+                ImportLog.Add($"⚠ Row for sale {sale.Id}: PDF generation failed: {ex.Message}");
+            }
+        }
+
         ImportLog.Add($"─── Done: {ProductsInserted} products inserted, {ProductsUpdated} updated | " +
-                      $"{ClientsInserted} clients inserted, {ClientsUpdated} updated ───");
+                      $"{ClientsInserted} clients inserted, {ClientsUpdated} updated | " +
+                      $"{SalesInserted} sales registered ───");
 
         return Page();
     }
 }
+

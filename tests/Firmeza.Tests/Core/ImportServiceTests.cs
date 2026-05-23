@@ -131,4 +131,55 @@ public class ImportServiceTests
         Assert.NotNull(error);
         Assert.Contains("FirstName", error!, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public void ParseSaleRow_DatosValidos_RetornaDatosDeVenta()
+    {
+        var fila = new Dictionary<string, string>
+        {
+            { "Quantity",  "5"          },
+            { "SaleDate",  "2026-05-23" },
+            { "Status",    "Completed"  },
+        };
+
+        var (qty, saleDate, status, error) = _parser.ParseSaleRow(fila);
+
+        Assert.Null(error);
+        Assert.NotNull(qty);
+        Assert.Equal(5, qty!.Value);
+        Assert.NotNull(saleDate);
+        Assert.Equal(new DateTime(2026, 5, 23), saleDate!.Value.Date);
+        Assert.Equal("Completed", status);
+    }
+
+    [Fact]
+    public void ParseSaleRow_CantidadInvalida_RetornaError()
+    {
+        var fila = new Dictionary<string, string>
+        {
+            { "Quantity", "cero" },
+        };
+
+        var (qty, saleDate, status, error) = _parser.ParseSaleRow(fila);
+
+        Assert.Null(qty);
+        Assert.NotNull(error);
+        Assert.Contains("Quantity", error!, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void ParseSaleRow_SinDatosDeVenta_RetornaTodoNulo()
+    {
+        var fila = new Dictionary<string, string>
+        {
+            { "ProductName", "Cemento" }
+        };
+
+        var (qty, saleDate, status, error) = _parser.ParseSaleRow(fila);
+
+        Assert.Null(qty);
+        Assert.Null(saleDate);
+        Assert.Null(status);
+        Assert.Null(error);
+    }
 }

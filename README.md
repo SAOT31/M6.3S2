@@ -220,15 +220,16 @@ Resultado esperado: **24 pruebas pasando, 0 fallando**.
 - Lista de ventas con filtro por estado y búsqueda por cliente.
 - Creación de venta con carrito dinámico (selección de cliente y productos).
 - Generación automática de recibo PDF al registrar una venta.
-- Botón de descarga del recibo PDF desde el listado y el detalle.
+- Botón de descarga del recibo PDF desde el listado y el detalle utilizando un manejador de página dinámico.
 - Página de detalle con productos, totales e IVA 19%.
 
 ### Importación
 - Página `/Import` que acepta archivos `.xlsx`.
 - Detección automática de columnas en español e inglés.
-- Normalización de datos mezclados (productos y clientes en la misma hoja).
+- Normalización de datos mezclados (productos, clientes y ventas en la misma hoja), descontando stock de productos e insertando registros vinculados.
+- Generación automática de recibos PDF para las ventas importadas.
 - Upsert inteligente: inserta si no existe, actualiza si ya existe.
-- Log visual de resultados con contadores y mensajes de error por fila.
+- Log visual de resultados con contadores (incluyendo ventas registradas) y mensajes de error por fila.
 
 ### Exportación
 - Página `/Export` con descarga directa de Excel y PDF.
@@ -241,10 +242,8 @@ Resultado esperado: **24 pruebas pasando, 0 fallando**.
 
 Los diagramas técnicos se encuentran en `docs/diagrams/`:
 
-- [`er-diagram.md`](docs/diagrams/er-diagram.md) — Diagrama Entidad-Relación
-- [`class-diagram.md`](docs/diagrams/class-diagram.md) — Diagrama de clases
-
----
+- [class-diagram.png](docs/diagrams/class-diagram.png) — Diagrama de clases
+- [er-diagram.png](docs/diagrams/er-diagram.png) — Diagrama Entidad-Relación
 
 ## Notas de despliegue
 

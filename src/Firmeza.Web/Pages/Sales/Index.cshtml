@@ -83,17 +83,10 @@
                            class="p-1.5 text-slate-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors" title="View detail">
                             <i class="bi bi-eye"></i>
                         </a>
-                        @{
-                            var receiptFile = System.IO.Path.Combine(
-                                Directory.GetCurrentDirectory(), "wwwroot", "recibos", $"recibo-{s.Id}.pdf");
-                        }
-                        @if (System.IO.File.Exists(receiptFile))
-                        {
-                            <a href="/recibos/recibo-@(s.Id).pdf" target="_blank"
-                               class="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors" title="Download Receipt PDF">
-                                <i class="bi bi-file-earmark-pdf"></i>
-                            </a>
-                        }
+                        <a href="/Sales?handler=DownloadReceipt&id=@s.Id" target="_blank"
+                           class="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors" title="Download Receipt PDF">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                        </a>
                     </td>
                 </tr>
             }

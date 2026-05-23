@@ -22,17 +22,10 @@ else
     <div class="flex items-center justify-between mb-6">
         <p class="text-sm text-gray-500">Details and products included in this sale.</p>
         <div class="flex items-center gap-3">
-            @{
-                var receiptPath = $"/recibos/recibo-{sale.Id}.pdf";
-                var receiptFull = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "recibos", $"recibo-{sale.Id}.pdf");
-            }
-            @if (System.IO.File.Exists(receiptFull))
-            {
-                <a href="@receiptPath" target="_blank"
-                   class="flex items-center gap-2 bg-red-500 hover:bg-red-400 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                    <i class="bi bi-file-earmark-pdf"></i> Download Receipt PDF
-                </a>
-            }
+            <a href="/Sales?handler=DownloadReceipt&id=@sale.Id" target="_blank"
+               class="flex items-center gap-2 bg-red-500 hover:bg-red-400 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                <i class="bi bi-file-earmark-pdf"></i> Download Receipt PDF
+            </a>
             <a href="/Sales" class="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 transition-colors">
                 <i class="bi bi-arrow-left"></i> Back
             </a>
